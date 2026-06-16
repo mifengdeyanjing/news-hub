@@ -14,7 +14,7 @@ apiRoutes.get('/news', async (c) => {
   await Promise.all(
     SOURCES.map(async (source) => {
       try {
-        const xml = await fetchText(source.feed, 12000);
+        const xml = await fetchText(source.feed, 8000);
         const items = parseFeedXml(xml);
         for (const item of items) {
           allItems.push({
@@ -47,7 +47,7 @@ apiRoutes.get('/article', async (c) => {
   if (!url) return c.json({ error: '缺少 url 参数' }, 400);
 
   try {
-    const html = await fetchText(url, 15000);
+    const html = await fetchText(url, 9000);
     const text = await extractArticleText(html);
     return c.json({ text });
   } catch (err) {
