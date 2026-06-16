@@ -24,20 +24,27 @@ if ! command -v cloudflared >/dev/null 2>&1; then
   echo "（按回车键关闭）"; read -r _; exit 1
 fi
 
-# 1) 确保本地生产服务在运行
-if lsof -ti:"$PORT" >/dev/null 2>&1; then
+# 1) 确保本地生产服务在运行（用 HTTP 探测，避免 lsof 误判）
+local_ok() {
+  [ "$(curl -s -o /dev/null -w '%{http_code}' --max-time 3 "http://localhost:$PORT/" 2>/dev/null)" = "200" ]
+}
+
+if local_ok; then
   echo "✅ 本地服务已在运行"
 else
   [ ! -d dist ] && { echo "📦 首次启动，正在构建（约 10 秒）…"; npm run build >/dev/null 2>&1; }
   echo "🚀 正在启动本地服务…"
   NODE_ENV=production nohup node server/index.js > /tmp/news-hub.log 2>&1 &
   echo $! > .news-hub.pid
+  for _ in $(seq 1 20); do
+    local_ok && break
+    sleep 1
+  done
+  if ! local_ok; then
+    echo "❌ 本地服务启动失败，请查看：/tmp/news-hub.log"
+    echo "（按回车键关闭）"; read -r _; exit 1
+  fi
 fi
-# 等本地服务就绪
-for _ in $(seq 1 20); do
-  curl -s -o /dev/null "http://localhost:$PORT/" && break
-  sleep 1
-done
 
 # 2) 关掉旧隧道，开新隧道
 pkill -f "cloudflared tunnel" 2>/dev/null

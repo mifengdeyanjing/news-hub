@@ -9,8 +9,8 @@ nvm use 20 2>/dev/null || nvm use 18 2>/dev/null
 PORT=3001
 URL="http://localhost:$PORT"
 
-# 已在运行 → 直接打开浏览器
-if lsof -ti:"$PORT" >/dev/null 2>&1; then
+# 已在运行 → 直接打开浏览器（用 HTTP 探测，避免误判）
+if [ "$(curl -s -o /dev/null -w '%{http_code}' --max-time 3 "$URL" 2>/dev/null)" = "200" ]; then
   open "$URL"
   exit 0
 fi
