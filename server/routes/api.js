@@ -6,15 +6,16 @@ import { extractArticleText } from '../lib/article.js';
 
 export const apiRoutes = new Hono();
 
-/** 聚合所有 RSS 源的最新资讯 */
-apiRoutes.get('/news', async (c) => {
+const FEED_TIMEOUT = 5000;
+
+async function fetchSources(sources) {
   const allItems = [];
   const failedSources = [];
 
   await Promise.all(
-    SOURCES.map(async (source) => {
+    sources.map(async (source) => {
       try {
-        const xml = await fetchText(source.feed, 8000);
+        const xml = await fetchText(source.feed, FEED_TIMEOUT);
         const items = parseFeedXml(xml);
         for (const item of items) {
           allItems.push({
@@ -33,6 +34,19 @@ apiRoutes.get('/news', async (c) => {
     }),
   );
 
+  return { allItems, failedSources };
+}
+
+/** 聚合 RSS 资讯，支持 ?group=ai 按分类拉取（避免 Vercel 10s 超时） */
+apiRoutes.get('/news', async (c) => {
+  const group = c.req.query('group');
+  const sources = group ? SOURCES.filter((s) => s.group === group) : SOURCES;
+
+  if (group && sources.length === 0) {
+    return c.json({ error: '无效的分类' }, 400);
+  }
+
+  const { allItems, failedSources } = await fetchSources(sources);
   allItems.sort((a, b) => b.timestamp - a.timestamp);
 
   const now = new Date();
@@ -47,7 +61,7 @@ apiRoutes.get('/article', async (c) => {
   if (!url) return c.json({ error: '缺少 url 参数' }, 400);
 
   try {
-    const html = await fetchText(url, 9000);
+    const html = await fetchText(url, 8000);
     const text = await extractArticleText(html);
     return c.json({ text });
   } catch (err) {

@@ -2,7 +2,7 @@ const USER_AGENT =
   'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148';
 
 /** 服务端统一 HTTP 请求 */
-export async function fetchText(url, timeoutMs = 15000) {
+export async function fetchText(url, timeoutMs = 5000) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
 
