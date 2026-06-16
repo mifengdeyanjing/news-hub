@@ -1,36 +1,43 @@
+import { SOURCES } from '@shared/sources';
+
 const BASE = '/api';
 
-const GROUPS = ['ai', 'economy', 'nation', 'tech'];
-
-async function request(path) {
-  const res = await fetch(`${BASE}${path}`);
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error(err.error ?? '请求失败');
-  }
-  return res.json();
+async function fetchFeed(source) {
+  const res = await fetch(`${BASE}/feed?id=${encodeURIComponent(source.id)}`);
+  if (!res.ok) throw new Error(source.name);
+  const data = await res.json();
+  return data.items ?? [];
 }
 
-/** 按分类并行拉取，避免单次请求超过 Vercel 10s 限制 */
+/** 每个来源单独请求，适配 Vercel 10s 函数限制 */
 export async function fetchNews() {
-  const results = await Promise.all(GROUPS.map((group) => request(`/news?group=${group}`)));
+  const results = await Promise.allSettled(SOURCES.map((source) => fetchFeed(source)));
 
   const items = [];
-  const failedSet = new Set();
+  const failedSources = [];
 
-  for (const result of results) {
-    items.push(...result.items);
-    result.failedSources.forEach((name) => failedSet.add(name));
-  }
+  results.forEach((result, i) => {
+    if (result.status === 'fulfilled') {
+      items.push(...result.value);
+    } else {
+      failedSources.push(SOURCES[i].name);
+    }
+  });
 
   items.sort((a, b) => b.timestamp - a.timestamp);
 
   const now = new Date();
   const updatedAt = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
 
-  return { items, failedSources: [...failedSet], updatedAt };
+  return { items, failedSources, updatedAt };
 }
 
 export function fetchArticle(url) {
-  return request(`/article?url=${encodeURIComponent(url)}`);
+  return fetch(`${BASE}/article?url=${encodeURIComponent(url)}`).then(async (res) => {
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: res.statusText }));
+      throw new Error(err.error ?? '请求失败');
+    }
+    return res.json();
+  });
 }

@@ -6,53 +6,33 @@ import { extractArticleText } from '../lib/article.js';
 
 export const apiRoutes = new Hono();
 
-const FEED_TIMEOUT = 5000;
+const FEED_TIMEOUT = 4000;
 
-async function fetchSources(sources) {
-  const allItems = [];
-  const failedSources = [];
-
-  await Promise.all(
-    sources.map(async (source) => {
-      try {
-        const xml = await fetchText(source.feed, FEED_TIMEOUT);
-        const items = parseFeedXml(xml);
-        for (const item of items) {
-          allItems.push({
-            ...item,
-            sourceId: source.id,
-            sourceName: source.name,
-            sourceIcon: source.icon,
-            sourceColor: source.color,
-            category: source.category,
-            group: source.group,
-          });
-        }
-      } catch {
-        failedSources.push(source.name);
-      }
-    }),
-  );
-
-  return { allItems, failedSources };
+function enrichItems(items, source) {
+  return items.map((item) => ({
+    ...item,
+    sourceId: source.id,
+    sourceName: source.name,
+    sourceIcon: source.icon,
+    sourceColor: source.color,
+    category: source.category,
+    group: source.group,
+  }));
 }
 
-/** 聚合 RSS 资讯，支持 ?group=ai 按分类拉取（避免 Vercel 10s 超时） */
-apiRoutes.get('/news', async (c) => {
-  const group = c.req.query('group');
-  const sources = group ? SOURCES.filter((s) => s.group === group) : SOURCES;
+/** 单个 RSS 源（每次只抓一个，避免 Vercel 10s 超时） */
+apiRoutes.get('/feed', async (c) => {
+  const id = c.req.query('id');
+  const source = SOURCES.find((s) => s.id === id);
+  if (!source) return c.json({ error: '来源不存在' }, 404);
 
-  if (group && sources.length === 0) {
-    return c.json({ error: '无效的分类' }, 400);
+  try {
+    const xml = await fetchText(source.feed, FEED_TIMEOUT);
+    const items = enrichItems(parseFeedXml(xml), source);
+    return c.json({ items });
+  } catch {
+    return c.json({ error: '抓取失败' }, 502);
   }
-
-  const { allItems, failedSources } = await fetchSources(sources);
-  allItems.sort((a, b) => b.timestamp - a.timestamp);
-
-  const now = new Date();
-  const updatedAt = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-
-  return c.json({ items: allItems, failedSources, updatedAt });
 });
 
 /** 抓取原文全文 */
