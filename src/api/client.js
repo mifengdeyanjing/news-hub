@@ -13,6 +13,10 @@ export function fetchNews() {
   return request('/news');
 }
 
+export function fetchStocks() {
+  return request('/stocks');
+}
+
 export function fetchArticle(url) {
   return request(`/article?url=${encodeURIComponent(url)}`);
 }

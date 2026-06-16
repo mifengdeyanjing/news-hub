@@ -1,7 +1,8 @@
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useArticle } from '@/hooks/useArticle';
 
 export function DetailPage() {
+  const navigate = useNavigate();
   const [params] = useSearchParams();
   const title = params.get('title') ?? '';
   const link = params.get('link') ?? '';
@@ -30,7 +31,9 @@ export function DetailPage() {
   return (
     <div className="mx-auto min-h-screen max-w-2xl bg-white pb-10">
       <div className="sticky top-0 z-10 border-b border-slate-100 bg-white/90 px-4 py-3 backdrop-blur">
-        <Link to="/" className="text-sm text-blue-600">← 返回列表</Link>
+        <button type="button" onClick={() => navigate(-1)} className="text-sm text-blue-600">
+          ← 返回列表
+        </button>
       </div>
 
       <article className="px-4 pt-4">

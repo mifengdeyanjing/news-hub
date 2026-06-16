@@ -3,13 +3,16 @@ import { SOURCES } from '../../shared/sources.js';
 import { fetchText } from '../lib/fetch.js';
 import { parseFeedXml } from '../lib/rss.js';
 import { extractArticleText } from '../lib/article.js';
+import { fetchStocks } from '../lib/stocks.js';
 import { getCache, setCache } from '../lib/cache.js';
 
 export const apiRoutes = new Hono();
 
 const FEED_TIMEOUT = 8000;
 const CACHE_TTL = 10 * 60 * 1000;
+const STOCK_TTL = 15 * 1000;
 const ALL_NEWS_KEY = '__all_news__';
+const STOCKS_KEY = '__stocks__';
 
 function enrichItems(items, source) {
   return items.map((item) => ({
@@ -64,6 +67,27 @@ apiRoutes.get('/news', async (c) => {
 
   setCache(ALL_NEWS_KEY, body, CACHE_TTL);
   return c.json(body);
+});
+
+/** 实时股票行情（缓存 15 秒，避免频繁请求） */
+apiRoutes.get('/stocks', async (c) => {
+  const cached = getCache(STOCKS_KEY);
+  if (cached) return c.json(cached);
+
+  try {
+    const quotes = await fetchStocks();
+    const now = new Date();
+    const pad = (n) => n.toString().padStart(2, '0');
+    const body = {
+      quotes,
+      updatedAt: `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`,
+    };
+    setCache(STOCKS_KEY, body, STOCK_TTL);
+    return c.json(body);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : '行情获取失败';
+    return c.json({ error: message }, 502);
+  }
 });
 
 /** 抓取原文全文 */

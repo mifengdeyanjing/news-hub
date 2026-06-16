@@ -1,10 +1,47 @@
-/** 顶部分类 Tab */
-export const CATEGORIES = [
-  { id: 'all', name: '全部', icon: '🌐' },
-  { id: 'ai', name: '人工智能', icon: '🤖' },
-  { id: 'economy', name: '财政经济', icon: '💰' },
-  { id: 'nation', name: '国家发展', icon: '🏛️' },
-  { id: 'tech', name: '科技数码', icon: '💻' },
+/** 一级页面的模块入口 */
+export const MODULES = [
+  { id: 'all', name: '全部资讯', icon: '🌐', desc: '所有来源最新汇总', color: '#0f172a', type: 'news' },
+  { id: 'economy', name: '财政经济', icon: '💰', desc: '财经政策 · 市场动态', color: '#c62828', type: 'news' },
+  { id: 'nation', name: '国家发展', icon: '🏛️', desc: '时政要闻 · 国家大事', color: '#b71c1c', type: 'news' },
+  { id: 'ai', name: '人工智能', icon: '🤖', desc: 'AI 前沿 · 大模型动态', color: '#0066ff', type: 'news' },
+  { id: 'tech', name: '科技数码', icon: '💻', desc: '科技创业 · 数码生活', color: '#1a73e8', type: 'news' },
+  { id: 'stocks', name: '股市行情', icon: '📈', desc: '指数 · 个股实时报价', color: '#16a34a', type: 'stocks' },
+];
+
+/** 股票行情分组（数据来自腾讯财经实时接口） */
+export const STOCK_GROUPS = [
+  {
+    id: 'index',
+    name: '大盘指数',
+    items: [
+      { code: 'sh000001', name: '上证指数' },
+      { code: 'sz399001', name: '深证成指' },
+      { code: 'sz399006', name: '创业板指' },
+      { code: 'sh000300', name: '沪深300' },
+      { code: 'sh000016', name: '上证50' },
+      { code: 'sh000688', name: '科创50' },
+      { code: 'sh000905', name: '中证500' },
+      { code: 'sz399673', name: '创业板50' },
+    ],
+  },
+  {
+    id: 'hot',
+    name: '热门个股',
+    items: [
+      { code: 'sh600519', name: '贵州茅台' },
+      { code: 'sz300750', name: '宁德时代' },
+      { code: 'sz002594', name: '比亚迪' },
+      { code: 'sh601318', name: '中国平安' },
+      { code: 'sh600036', name: '招商银行' },
+      { code: 'sz000858', name: '五粮液' },
+      { code: 'sz300059', name: '东方财富' },
+      { code: 'sh601012', name: '隆基绿能' },
+      { code: 'sh601899', name: '紫金矿业' },
+      { code: 'sz000333', name: '美的集团' },
+      { code: 'sh600900', name: '长江电力' },
+      { code: 'sh688981', name: '中芯国际' },
+    ],
+  },
 ];
 
 /** 所有 RSS 资讯源 */

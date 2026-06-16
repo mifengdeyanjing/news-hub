@@ -1,87 +1,23 @@
-import { useMemo, useState } from 'react';
-import { SOURCES } from '@shared/sources';
-import { useNews } from '@/hooks/useNews';
-import { Header } from '@/components/Header';
-import { CategoryBar } from '@/components/CategoryBar';
-import { SourceBar } from '@/components/SourceBar';
-import { NewsCard } from '@/components/NewsCard';
-import { LoadingState } from '@/components/LoadingState';
-import { EmptyState } from '@/components/EmptyState';
+import { MODULES } from '@shared/sources';
+import { ModuleCard } from '@/components/ModuleCard';
 
 export function HomePage() {
-  const { data, isLoading, isFetching, refetch, error } = useNews();
-  const [category, setCategory] = useState('all');
-  const [sourceId, setSourceId] = useState('all');
-
-  const visibleSources = useMemo(
-    () => (category === 'all' ? SOURCES : SOURCES.filter((s) => s.group === category)),
-    [category],
-  );
-
-  const filteredItems = useMemo(() => {
-    if (!data) return [];
-    return data.items.filter((item) => {
-      if (category !== 'all' && item.group !== category) return false;
-      if (sourceId !== 'all' && item.sourceId !== sourceId) return false;
-      return true;
-    });
-  }, [data, category, sourceId]);
-
-  const handleCategoryChange = (id) => {
-    setCategory(id);
-    setSourceId('all');
-  };
-
-  const subtitle = isLoading
-    ? '正在加载…'
-    : data
-      ? `已更新 ${data.updatedAt} · 共 ${filteredItems.length} 条`
-      : '加载失败';
-
   return (
-    <div className="mx-auto min-h-screen max-w-2xl pb-8">
-      <Header subtitle={subtitle} />
-      <CategoryBar active={category} onChange={handleCategoryChange} />
-      <SourceBar sources={visibleSources} active={sourceId} onChange={setSourceId} />
+    <div className="mx-auto min-h-screen max-w-2xl pb-10">
+      <header className="bg-gradient-to-br from-slate-900 to-slate-800 px-5 pb-7 pt-8 text-white">
+        <h1 className="text-2xl font-bold tracking-wide">📰 资讯聚合</h1>
+        <p className="mt-1 text-sm text-white/65">选择一个模块，查看最新动态</p>
+      </header>
 
-      {data?.failedSources?.length > 0 && (
-        <div className="mx-4 mt-3 rounded-xl bg-amber-50 px-4 py-3 text-xs text-amber-800">
-          ⚠️ {data.failedSources.join('、')} 加载失败，其余来源正常
-        </div>
-      )}
-
-      {error && (
-        <div className="mx-4 mt-3 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">
-          加载失败：{error.message}
-          <button type="button" onClick={() => refetch()} className="ml-2 underline">
-            重试
-          </button>
-        </div>
-      )}
-
-      {isLoading ? (
-        <LoadingState />
-      ) : filteredItems.length > 0 ? (
-        <div className="space-y-3 px-4 pt-4">
-          {filteredItems.map((item, i) => (
-            <NewsCard key={`${item.link}-${i}`} item={item} />
-          ))}
-        </div>
-      ) : (
-        <EmptyState />
-      )}
-
-      <div className="mt-6 flex flex-col items-center gap-2 px-4">
-        <button
-          type="button"
-          onClick={() => refetch()}
-          disabled={isFetching}
-          className="rounded-full bg-slate-900 px-6 py-2 text-sm text-white disabled:opacity-50"
-        >
-          {isFetching ? '刷新中…' : '刷新资讯'}
-        </button>
-        <p className="text-center text-xs text-slate-400">数据来源：各平台公开 RSS</p>
+      <div className="grid grid-cols-2 gap-3 px-4 pt-5">
+        {MODULES.map((module) => (
+          <ModuleCard key={module.id} module={module} />
+        ))}
       </div>
+
+      <p className="mt-8 text-center text-xs text-slate-400">
+        资讯来自各平台公开 RSS · 行情来自腾讯财经
+      </p>
     </div>
   );
 }
