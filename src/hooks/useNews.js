@@ -5,7 +5,7 @@ export function useNews() {
   return useQuery({
     queryKey: ['news'],
     queryFn: fetchNews,
-    staleTime: 5 * 60 * 1000,
-    refetchOnWindowFocus: true,
+    staleTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 }

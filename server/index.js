@@ -2,11 +2,14 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { serve } from '@hono/node-server';
 import { serveStatic } from '@hono/node-server/serve-static';
-import { createApp } from './app.js';
+import { apiRoutes } from './routes/api.js';
 
-const app = createApp();
+const app = new Hono();
 const isProd = process.env.NODE_ENV === 'production';
 const port = Number(process.env.PORT) || 3001;
+
+app.use('/*', cors());
+app.route('/api', apiRoutes);
 
 if (isProd) {
   app.use('/*', serveStatic({ root: './dist' }));
