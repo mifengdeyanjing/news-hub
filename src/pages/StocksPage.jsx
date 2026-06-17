@@ -2,13 +2,11 @@ import { STOCK_GROUPS } from '@shared/sources';
 import { useStocks } from '@/hooks/useStocks';
 import { BackBar } from '@/components/BackBar';
 import { StockCard } from '@/components/StockCard';
-import { WatchlistStockCard } from '@/components/WatchlistStockCard';
 import { LoadingState } from '@/components/LoadingState';
 
 export function StocksPage() {
   const { data, isLoading, isFetching, refetch, error } = useStocks();
   const quotes = data?.quotes ?? {};
-  const watchlistAnalysis = data?.watchlistAnalysis ?? {};
 
   const subtitle = isLoading
     ? '正在加载…'
@@ -48,24 +46,14 @@ export function StocksPage() {
             <section key={group.id}>
               <h2 className="mb-2 px-1 text-sm font-semibold text-slate-500">{group.name}</h2>
               <div className="space-y-3">
-                {group.items.map((item) =>
-                  group.id === 'watchlist' ? (
-                    <WatchlistStockCard
-                      key={item.code}
-                      name={item.name}
-                      code={item.code}
-                      quote={quotes[item.code]}
-                      analysis={watchlistAnalysis[item.code]}
-                    />
-                  ) : (
-                    <StockCard
-                      key={item.code}
-                      name={item.name}
-                      code={item.code}
-                      quote={quotes[item.code]}
-                    />
-                  ),
-                )}
+                {group.items.map((item) => (
+                  <StockCard
+                    key={item.code}
+                    name={item.name}
+                    code={item.code}
+                    quote={quotes[item.code]}
+                  />
+                ))}
               </div>
             </section>
           ))}

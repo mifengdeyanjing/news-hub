@@ -11,13 +11,6 @@ export const MODULES = [
 /** 股票行情分组（数据来自腾讯财经实时接口） */
 export const STOCK_GROUPS = [
   {
-    id: 'watchlist',
-    name: '我的关注',
-    items: [
-      { code: 'sh601226', name: '华电科工' },
-    ],
-  },
-  {
     id: 'index',
     name: '大盘指数',
     items: [
@@ -50,11 +43,6 @@ export const STOCK_GROUPS = [
     ],
   },
 ];
-
-/** 我的关注列表（在此添加股票，会自动获得深度分析） */
-export function getWatchlistItems() {
-  return STOCK_GROUPS.find((g) => g.id === 'watchlist')?.items ?? [];
-}
 
 /** 所有 RSS 资讯源 */
 export const SOURCES = [

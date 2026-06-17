@@ -3,8 +3,7 @@ import { SOURCES } from '../../shared/sources.js';
 import { fetchText } from '../lib/fetch.js';
 import { parseFeedXml } from '../lib/rss.js';
 import { extractArticleText } from '../lib/article.js';
-import { fetchStocks, fetchWatchlistOrderBook, getWatchlistItems } from '../lib/stocks.js';
-import { analyzeWatchlistQuote } from '../lib/stockAnalysis.js';
+import { fetchStocks } from '../lib/stocks.js';
 import { getCache, setCache } from '../lib/cache.js';
 
 export const apiRoutes = new Hono();
@@ -76,23 +75,11 @@ apiRoutes.get('/stocks', async (c) => {
   if (cached) return c.json(cached);
 
   try {
-    const watchlist = getWatchlistItems();
-    const [quotes, orderBooks] = await Promise.all([
-      fetchStocks(),
-      fetchWatchlistOrderBook(watchlist.map((i) => i.code)),
-    ]);
-
-    const watchlistAnalysis = {};
-    for (const item of watchlist) {
-      const analysis = analyzeWatchlistQuote(item.name, quotes[item.code], orderBooks[item.code]);
-      if (analysis) watchlistAnalysis[item.code] = analysis;
-    }
-
+    const quotes = await fetchStocks();
     const now = new Date();
     const pad = (n) => n.toString().padStart(2, '0');
     const body = {
       quotes,
-      watchlistAnalysis,
       updatedAt: `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`,
     };
     setCache(STOCKS_KEY, body, STOCK_TTL);
