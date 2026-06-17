@@ -32,6 +32,11 @@ local_ok() {
 if local_ok; then
   echo "✅ 本地服务已在运行"
 else
+  if lsof -ti:"$PORT" >/dev/null 2>&1; then
+    echo "🔄 端口被占用但页面不可用，正在重启本地服务…"
+    lsof -ti:"$PORT" | xargs kill -9 2>/dev/null
+    sleep 1
+  fi
   [ ! -d dist ] && { echo "📦 首次启动，正在构建（约 10 秒）…"; npm run build >/dev/null 2>&1; }
   echo "🚀 正在启动本地服务…"
   NODE_ENV=production nohup node server/index.js > /tmp/news-hub.log 2>&1 &
